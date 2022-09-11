@@ -22,6 +22,10 @@ import java.util.*;
 public class DemoApplication {
     public static void main(String[] args) {
         SpringApplication.run(DemoApplication.class, args);
+        new Thread(DemoApplication::extracted).start();
+    }
+
+    private static void extracted() {
         String url = "https://www.apple.com.cn/shop/pickup-message-recommendations?mts.0=regular&mts.1=compact&location=%E4%B8%8A%E6%B5%B7%20%E4%B8%8A%E6%B5%B7%20%E6%9D%A8%E6%B5%A6%E5%8C%BA&store=R389&product=MQ873CH/A";
         String webhooks = "https://open.feishu.cn/open-apis/bot/v2/hook/1b5cce81-9844-4731-bce6-5a2a1843f27f";
 
@@ -50,28 +54,28 @@ public class DemoApplication {
             } catch (JsonProcessingException e) {
                 continue;
             }
-            List<Object> objects = (List<Object>) ((Map<String, Object>) ((Map<String, Object>) recommend.get("body")).get("PickupMessage")).get("recommendedProducts");
-            if (objects.size() != 0) {
-                System.out.println("======找到啦" + objects + "找到啦======");
-                Feishu content = new Feishu("text", new Content(objects.toString()));
-                byte[] bytes = new byte[0];
-                try {
-                    bytes = objectMapper.writeValueAsBytes(content);
-                } catch (JsonProcessingException e) {
-                    continue;
-                }
-                try {
-                    request = HttpRequest.newBuilder().uri(new URI(webhooks)).POST(HttpRequest.BodyPublishers.ofByteArray(bytes)).build();
-                } catch (URISyntaxException e) {
-                    continue;
-                }
-                try {
-                    response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                } catch (IOException | InterruptedException e) {
-                    continue;
-                }
-                System.out.println("Feishu response" + response);
-            }
+//            List<Object> objects = (List<Object>) ((Map<String, Object>) ((Map<String, Object>) recommend.get("body")).get("PickupMessage")).get("recommendedProducts");
+//            if (objects.size() != 0) {
+//                System.out.println("======找到啦" + objects + "找到啦======");
+//                Feishu content = new Feishu("text", new Content(objects.toString()));
+//                byte[] bytes = new byte[0];
+//                try {
+//                    bytes = objectMapper.writeValueAsBytes(content);
+//                } catch (JsonProcessingException e) {
+//                    continue;
+//                }
+//                try {
+//                    request = HttpRequest.newBuilder().uri(new URI(webhooks)).POST(HttpRequest.BodyPublishers.ofByteArray(bytes)).build();
+//                } catch (URISyntaxException e) {
+//                    continue;
+//                }
+//                try {
+//                    response = client.send(request, HttpResponse.BodyHandlers.ofString());
+//                } catch (IOException | InterruptedException e) {
+//                    continue;
+//                }
+//                System.out.println("Feishu response" + response);
+//            }
             List<Map<String, Object>> res = new ArrayList<>();
 
             ((List<Map<String, Object>>) ((Map<String, Object>) ((Map<String, Object>) recommend.get("body")).get("PickupMessage")).get("stores"))
