@@ -84,7 +84,7 @@ public class DemoApplication {
                     .map(x -> (Map<String, Object>) x.get("partsAvailability"))
                     .filter(x -> !CollectionUtils.isEmpty(x))
                     .map(x -> x.values())
-                    .flatMap(x -> x.stream().map(z -> (Map<String, Object>) z).filter(z -> "MQ8A3CH/A".equals(z.get("partNumber")) || "MQ873CH/A".equals(z.get("partNumber")) || "MQ883CH/A".equals(z.get("partNumber"))).map(y -> (Map<String, Object>) ((Map<String, Object>) y.get("messageTypes")).get("regular")))
+                    .flatMap(x -> x.stream().map(z -> (Map<String, Object>) z).filter(z -> Objects.nonNull(z.get("partNumber")) && z.get("partNumber").toString().startsWith("MQ8")).map(y -> (Map<String, Object>) ((Map<String, Object>) y.get("messageTypes")).get("regular")))
                     .forEach(x -> {
                         Map<String, Object> map = new HashMap<>();
                         map.put("时间", x.get("storePickupQuote"));
