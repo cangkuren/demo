@@ -26,13 +26,16 @@ public class DemoApplication {
     }
 
     private static void extracted() {
-        String url = "https://www.apple.com.cn/shop/pickup-message-recommendations?mts.0=regular&mts.1=compact&location=%E4%B8%8A%E6%B5%B7%20%E4%B8%8A%E6%B5%B7%20%E6%9D%A8%E6%B5%A6%E5%8C%BA&store=R389&product=MQ873CH/A";
-        String webhooks = "https://open.feishu.cn/open-apis/bot/v2/hook/1b5cce81-9844-4731-bce6-5a2a1843f27f";
+        // iphone
+        String url = "https://www.apple.com.cn/shop/pickup-message-recommendations?mts.0=regular&mts.1=compact&searchNearby=true&store=R683&product=MU2Q3CH/A";
+        // watch
+//        String url = "https://www.apple.com.cn/shop/fulfillment-messages?searchNearby=true&parts.0=MQFG3CH/A&option.0=MQG03CH/A,MQEP3FE/A&store=R581";
+        String webhooks = "https://open.feishu.cn/open-apis/bot/v2/hook/c9e3dd52-57af-4ae8-9f4c-da737894c212";
 
         ObjectMapper objectMapper = new ObjectMapper();
         byte[] preBytes = new byte[0];
         while (true) {
-            HttpRequest request = null;
+            HttpRequest request;
             try {
                 request = HttpRequest.newBuilder().uri(new URI(url))
                         .GET().timeout(Duration.ofSeconds(5)).build();
@@ -40,42 +43,22 @@ public class DemoApplication {
                 continue;
             }
             HttpClient client = HttpClient.newHttpClient();
-            HttpResponse<String> response = null;
+            HttpResponse<String> response;
             try {
                 response = client.send(request, HttpResponse.BodyHandlers.ofString());
             } catch (IOException | InterruptedException e) {
                 continue;
             }
             System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]" + response.body());
-            Map<String, Object> recommend = null;
+            Map<String, Object> recommend;
             try {
                 recommend = objectMapper.readValue(response.body(), new TypeReference<>() {
                 });
             } catch (JsonProcessingException e) {
                 continue;
             }
-//            List<Object> objects = (List<Object>) ((Map<String, Object>) ((Map<String, Object>) recommend.get("body")).get("PickupMessage")).get("recommendedProducts");
-//            if (objects.size() != 0) {
-//                System.out.println("======找到啦" + objects + "找到啦======");
-//                Feishu content = new Feishu("text", new Content(objects.toString()));
-//                byte[] bytes = new byte[0];
-//                try {
-//                    bytes = objectMapper.writeValueAsBytes(content);
-//                } catch (JsonProcessingException e) {
-//                    continue;
-//                }
-//                try {
-//                    request = HttpRequest.newBuilder().uri(new URI(webhooks)).POST(HttpRequest.BodyPublishers.ofByteArray(bytes)).build();
-//                } catch (URISyntaxException e) {
-//                    continue;
-//                }
-//                try {
-//                    response = client.send(request, HttpResponse.BodyHandlers.ofString());
-//                } catch (IOException | InterruptedException e) {
-//                    continue;
-//                }
-//                System.out.println("Feishu response" + response);
-//            }
+
+
             List<Map<String, Object>> res = new ArrayList<>();
 
             ((List<Map<String, Object>>) ((Map<String, Object>) ((Map<String, Object>) recommend.get("body")).get("PickupMessage")).get("stores"))
@@ -83,14 +66,15 @@ public class DemoApplication {
                     .filter(x -> !CollectionUtils.isEmpty(x))
                     .map(x -> (Map<String, Object>) x.get("partsAvailability"))
                     .filter(x -> !CollectionUtils.isEmpty(x))
-                    .map(x -> x.values())
-                    .flatMap(x -> x.stream().map(z -> (Map<String, Object>) z).filter(z -> Objects.nonNull(z.get("partNumber")) && z.get("partNumber").toString().startsWith("MQ8")).map(y -> (Map<String, Object>) ((Map<String, Object>) y.get("messageTypes")).get("regular")))
+                    .map(Map::values)
+                    .flatMap(x -> x.stream().map(z -> (Map<String, Object>) z).filter(z -> Objects.nonNull(z.get("partNumber")) && z.get("partNumber").toString().startsWith("MU")).map(y -> (Map<String, Object>) ((Map<String, Object>) y.get("messageTypes")).get("regular")))
                     .forEach(x -> {
                         Map<String, Object> map = new HashMap<>();
                         map.put("时间", x.get("storePickupQuote"));
                         map.put("型号", x.get("storePickupProductTitle"));
                         res.add(map);
                     });
+
 
             if (!CollectionUtils.isEmpty(res)) {
                 System.out.println("======找到啦" + res + "找到啦======");
@@ -118,7 +102,7 @@ public class DemoApplication {
                 System.out.println("Feishu response" + response);
             }
             try {
-                Thread.sleep(new Random().nextInt(200));
+                Thread.sleep(500 + new Random().nextInt(200));
             } catch (InterruptedException e) {
                 continue;
             }
